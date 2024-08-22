@@ -1,13 +1,13 @@
 {% extends 'BaseClassifier' %}
 
 {% block predict %}
-    float votes[{{ this.num_outputs }}] = { 0 };
+    uint16_t votes[{{ this.num_outputs }}] = { 0 };
     uint8_t classIdx = 0;
     float classScore = 0;
 
     {% for k, tree in enumerate(trees) %}
-        tree{{ k }}(x, &classIdx, &classScore);
-        votes[classIdx] += classScore;
+    tree{{ k }}(x, &classIdx, &classScore);
+    votes[classIdx] += 1;
     {% endfor %}
 
     {% include 'vote' indent content %}
