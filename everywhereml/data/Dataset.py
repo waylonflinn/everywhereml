@@ -54,7 +54,9 @@ class Dataset:
         return Dataset(
             name=name or dataset.filename,
             feature_names=dataset.feature_names,
-            target_names=dataset.target_names,
+            #target_names=dataset.target_names,
+            # change target_names into a map
+            target_names = {i:name for i,name in enumerate(dataset.target_names)},
             X=dataset.data,
             y=dataset.target
         )
@@ -90,7 +92,22 @@ class Dataset:
         numerics = ['int16', 'int32', 'int64', 'float16', 'float32', 'float64']
         numeric_df = df.select_dtypes(include=numerics)
         feature_names = [c for c in numeric_df.columns if c != target_column and c != target_name_column]
-        target_names = df[target_name_column].unique() if target_name_column is not None else None
+
+        assert target_column is not None
+        # build target_names from actual data
+        if(target_name_column is not None):
+            # if name column is available build from that and ensure consistency
+            target_series = df[target_column]
+            target_name_series = df[target_name_column]
+            target_names = {}
+            for target, name in zip(target_series, target_name_series):
+                if target in target_names:
+                    assert target_names[target] == name
+                else:
+                    target_names[target] = name
+        else:
+            target_names = None
+
 
         return Dataset(
             name=name,
@@ -118,7 +135,7 @@ class Dataset:
         self.annotations = []
 
         feature_names = [f for f in feature_names] if feature_names is not None else ['f_%d' % i for i in range(X.shape[1])]
-        target_names = [n for n in target_names] if target_names is not None else ['target_%d' % i for i in range(len(set(y)))]
+        target_names = target_names if target_names is not None else { i: 'target_%d' % i for i in set(y)}
 
         self.replace(X=X, y=y, feature_names=feature_names, target_names=target_names)
 
@@ -149,10 +166,10 @@ class Dataset:
     @property
     def class_map(self):
         """
-        Get mapping from target id to target name
+        Get sorted mapping from target id to target name
         :return: dict
         """
-        return {i: target_name for i, target_name in enumerate(self.target_names)}
+        return {i: self.target_names[i] for i in sorted(self.target_names.keys())}
 
     @property
     def plot(self):
