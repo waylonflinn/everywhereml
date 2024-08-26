@@ -1,14 +1,44 @@
 {% extends 'BaseClassifier' %}
 
-{% block predict %}
-    uint16_t votes[{{ this.num_outputs }}] = { 0 };
-    uint8_t classIdx = 0;
-    float classScore = 0;
+{% block public %}
+    static const uint8_t TREE_COUNT = {{ this.num_trees }};
+    static const uint8_t CLASS_COUNT = {{ this.num_outputs }};
 
-    {% for k, tree in enumerate(trees) %}
-    tree{{ k }}(x, &classIdx, &classScore);
-    votes[classIdx] += 1;
-    {% endfor %}
+
+    /**
+    * Get votes from trees
+    */
+    void getVotes({{ input_dtype or 'float' }} *x, uint16_t* votes) {
+        
+        uint8_t classIdx = 0;
+        float classScore = 0;
+
+        {% for k, tree in enumerate(trees) %}
+        tree{{ k }}(x, &classIdx, &classScore);
+        votes[classIdx] += 1;
+        {% endfor %}
+    }
+
+    /**
+     * Construct probabilities from tree votes
+     */
+    void getProbabilities({{ input_dtype or 'float' }} *x, float* probabilities) {
+
+        uint16_t votes[CLASS_COUNT] = { 0 };
+
+        getVotes(x, votes);
+
+        for (uint8_t i = 0; i < CLASS_COUNT; i++) {
+            probabilities[i] = votes[i] / (float) TREE_COUNT;
+        }
+    }
+
+{% endblock %}
+
+{% block predict %}
+    uint16_t votes[CLASS_COUNT] = { 0 };
+
+    getVotes(x, votes);
 
     {% include 'vote' indent content %}
 {% endblock %}

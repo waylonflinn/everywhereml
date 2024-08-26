@@ -3,6 +3,11 @@ from everywhereml.sklearn.SklearnBaseClassifier import SklearnBaseClassifier
 
 
 class RandomForestClassifier(SklearnBaseClassifier, Impl):
+
+    @property
+    def num_trees(self):
+        return len(self.estimators_)
+
     """
     sklearn.ensemble.RandomForestClassifier wrapper
     """

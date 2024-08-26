@@ -6,6 +6,10 @@
  */
 class {{ class_name or this.class_name }} {
     public:
+    
+        {% filter indent(4) %}
+        {% block public %}{% endblock %}
+        {% endfilter %}
 
         /**
          * Predict class from features
@@ -22,6 +26,7 @@ class {{ class_name or this.class_name }} {
 
             return (lastPrediction = predictedValue);
         }
+
 
         {% filter indent(4) %}
         {% include 'class_map' indent content %}
