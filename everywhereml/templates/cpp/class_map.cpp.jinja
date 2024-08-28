@@ -1,5 +1,7 @@
 {% if len(class_map) > 0 %}
 
+String CLASS_LIST[{{len(class_list)}}] = { {% for target_name in class_list %} "{{target_name}}", {% endfor %}};
+
 /**
  * Predict class label
  */
